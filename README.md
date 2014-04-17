@@ -7,7 +7,7 @@ Resources
 ### OCR
 [python tesseract] (https://code.google.com/p/python-tesseract/)
 
-### Html camera access:
+### Html camera access
 `<input type="file" accept="image/*" capture="camera">`
 
 
