@@ -8,7 +8,7 @@ Resources
 [python tesseract] (https://code.google.com/p/python-tesseract/)
 
 ### Html camera access:
-<input type="file" accept="image/*" capture="camera">
+`<input type="file" accept="image/*" capture="camera">`
 
 
 Moving Forward
