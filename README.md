@@ -10,6 +10,9 @@ Resources
 ### Html camera access
 `<input type="file" accept="image/*" capture="camera">`
 
+### A simple flask app for uploading images
+[flask-image-uploader] (https://github.com/bboe/flask-image-uploader)
+
 
 Moving Forward
 --------------
