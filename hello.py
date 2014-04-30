@@ -12,3 +12,6 @@ app = Flask(__name__)
 def hello():
     print image_to_string(Image.open('test.png'))
     return 'Hello World!'
+
+if __name__ == '__main__':
+    app.run()
