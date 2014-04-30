@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 import Image
-from tesseract import image_to_string
+from pytesseract import image_to_string
 
 __all__ = ['image_to_string']
 
