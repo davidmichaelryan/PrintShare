@@ -44,7 +44,7 @@ http://wiki.github.com/hoffstaetter/python-tesseract
 # CHANGE THIS IF TESSERACT IS NOT IN YOUR PATH, OR IS NAMED DIFFERENTLY
 tesseract_cmd = 'tesseract'
 
-import Image
+from PIL import Image
 import StringIO
 import subprocess
 import sys

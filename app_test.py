@@ -2,7 +2,7 @@ import flask
 import json
 import os
 import time
-from PIL import Image, ImageFile
+from PIL import ImageFile
 from gevent.event import AsyncResult, Timeout
 from gevent.queue import Empty, Queue
 from shutil import rmtree
