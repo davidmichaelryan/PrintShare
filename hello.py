@@ -3,6 +3,9 @@ from flask import Flask
 import Image
 from tesseract import image_to_string
 
+__all__ = ['image_to_string']
+
+
 app = Flask(__name__)
 
 @app.route('/')
