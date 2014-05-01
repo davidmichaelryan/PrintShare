@@ -6,19 +6,27 @@ import json
 import yaml
 import pprint
 
-#denote multi-word search by leading with '%22' and replacing spaces with '%20'
-query = '%22astrobiologist%20chris%20mckay%20searches%20extreme%20landscapes'
-url = 'https://www.googleapis.com/customsearch/v1?key=AIzaSyDLjjiXwmTfTKufnyhoKgCZhG6rmXz7lpM&cx=002838561577770740964:v1yhgyblaxo&q='
-url = url+query
-data = urllib2.urlopen(url)
-data = yaml.load(data)
+def query(q):
+    url = 'https://www.googleapis.com/customsearch/v1?key=AIzaSyDLjjiXwmTfTKufnyhoKgCZhG6rmXz7lpM&cx=002838561577770740964:v1yhgyblaxo&q='
+    
+    q = q.replace(',', '').replace('.','').replace("''", '').replace('\n', ' ')
+    q = q.split(' ')[:10]
+    return q
+    q = '%20'.join(q)
+    newUrl = url+q
+    data = urllib2.urlopen(newUrl)
+    data = yaml.load(data)
+    return newUrl
+    if 'items' not in data:
+        q = data['spelling']['correctedQuery'].replace(' ', '%20')
+        newUrl = url + q
+        data = urllib2.urlopen(newUrl)
+        data = yaml.load(data)
+        if 'items' not in data:
+            return 'could not find queries'
+    results = data['items'][0]['link']
+    return results
 
-results = [ [data['items'][0]['title'], data['items'][0]['link'], data['items'][0]['snippet']],
-			[data['items'][1]['title'], data['items'][1]['link'], data['items'][1]['snippet']],
-			[data['items'][2]['title'], data['items'][2]['link'], data['items'][2]['snippet']]  ]
-
-print('----------------------------------------\n')
-for x in xrange(0,3):
-	for y in xrange(0,3):
-		print(results[x][y])
-	print('\n----------------\n')
+# if __name__ == '__main__':
+#     text = "Alien Worlds on Earth Astrobiologlst Chris McKay searches extreme landscapes for clues about life on other planets."
+#     print query(text)    
