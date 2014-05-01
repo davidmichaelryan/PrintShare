@@ -115,7 +115,6 @@ def image_to_string(image, lang=None, boxes=False):
     Runs tesseract on the specified image. First, the image is written to disk,
     and then the tesseract command is run on the image. Resseract's result is
     read, and the temporary files are erased.
-
     '''
 
     input_file_name = '%s.bmp' % tempnam()

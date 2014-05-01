@@ -2,7 +2,7 @@ import flask
 import json
 import os
 import time
-from PIL import ImageFile
+from PIL import Image, ImageFile
 from gevent.event import AsyncResult, Timeout
 from gevent.queue import Empty, Queue
 from shutil import rmtree
@@ -10,13 +10,15 @@ from hashlib import sha1
 from stat import S_ISREG, ST_CTIME, ST_MODE
 
 import pytesseract
-
+import google
 
 DATA_DIR = 'data'
 KEEP_ALIVE_DELAY = 25
 MAX_IMAGE_SIZE = 800, 600
 MAX_IMAGES = 10
 MAX_DURATION = 300
+global start
+start = 0
 
 app = flask.Flask(__name__, static_folder=DATA_DIR)
 broadcast_queue = Queue()
@@ -99,6 +101,7 @@ def event_stream(client):
 
 @app.route('/post', methods=['POST'])
 def post():
+    global start
     sha1sum = sha1(flask.request.data).hexdigest()
     target = os.path.join(DATA_DIR, '{0}.jpg'.format(sha1sum))
     message = json.dumps({'src': target,
@@ -111,8 +114,11 @@ def post():
     except Exception as e:  # Output errors
         return '{0}'.format(e)
     image = Image.open(target)
-    return 'Content of the image ['+ pytesseract.image_to_string(image)+']'
-    
+    q = pytesseract.image_to_string(image)
+    result = google.query(q)
+    answer= str(q) + '<br><br>' + str(result)+'<br>'
+    return answer
+
     
 
 
