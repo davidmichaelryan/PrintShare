@@ -5,18 +5,26 @@ import urllib2
 import json
 import yaml
 import pprint
+import string 
+
+def clean(x):
+    if not x.isdigit():
+        if any(i.isdigit() for i in x):
+            return False
+    return True
 
 def query(q):
     url = 'https://www.googleapis.com/customsearch/v1?key=AIzaSyDLjjiXwmTfTKufnyhoKgCZhG6rmXz7lpM&cx=002838561577770740964:v1yhgyblaxo&q='
     
-    q = q.replace(',', '').replace('.','').replace("''", '').replace('\n', ' ')
-    q = q.split(' ')[:10]
-    return q
-    q = '%20'.join(q)
+    q = q.replace(',', '').replace('.','').replace("''", '').replace('\n', ' ').replace('-',' ')
+    q = q.split(' ')
+
+    q = [x for x in q if clean(x)]
+
+    q = '%20'.join(q[:8])
     newUrl = url+q
     data = urllib2.urlopen(newUrl)
     data = yaml.load(data)
-    return newUrl
     if 'items' not in data:
         q = data['spelling']['correctedQuery'].replace(' ', '%20')
         newUrl = url + q
@@ -24,9 +32,14 @@ def query(q):
         data = yaml.load(data)
         if 'items' not in data:
             return 'could not find queries'
-    results = data['items'][0]['link']
+    results = []
+    for i in range(len(data['items'])):
+        if i > 5:
+            break
+        else:
+            results.append(data['items'][i]['link'])
     return results
 
-# if __name__ == '__main__':
-#     text = "Alien Worlds on Earth Astrobiologlst Chris McKay searches extreme landscapes for clues about life on other planets."
-#     print query(text)    
+if __name__ == '__main__':
+    text = "Alien Worlds on E213rth Astrobiologlst Chris McKay searches extreme landscapes for clues about life on other planets."
+    print query(text)    
