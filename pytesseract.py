@@ -125,6 +125,7 @@ def image_to_string(image, lang=None, boxes=False):
         output_file_name = '%s.box' % output_file_name_base
     try:
         image.save(input_file_name)
+        return 'blah blah blah'
         status, error_string = run_tesseract(input_file_name,
                                              output_file_name_base,
                                              lang=lang,
