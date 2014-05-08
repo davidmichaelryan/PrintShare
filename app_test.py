@@ -114,9 +114,13 @@ def post():
             broadcast(message)  # Notify subscribers of completion
     except Exception as e:  # Output errors
         return '{0}'.format(e)
-    image = Image.open(target)
+    try:
+      image = Image.open(target)
+      return 'it worked...'
+    except IOError:
+      return 'MAYDAYYYYY'
     q = pytesseract.image_to_string(image)
-    return 'got past tesseract'
+    return q
     result = google.query(q)
     answer= str(q) + '<br><br>' 
     for r in result:
