@@ -115,6 +115,7 @@ def post():
     except Exception as e:  # Output errors
         return '{0}'.format(e)
     image = Image.open(target)
+    return 'GOT TO HERE'
     q = pytesseract.image_to_string(image)
     return q
     result = google.query(q)
