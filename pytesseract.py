@@ -70,7 +70,6 @@ def run_tesseract(input_filename, output_filename_base, lang=None, boxes=False):
         command += ['batch.nochop', 'makebox']
     proc = subprocess.Popen(command,
             stderr=subprocess.PIPE)
-    return ('', '')
     return (proc.wait(), proc.stderr.read())
 
 def cleanup(filename):
@@ -129,7 +128,6 @@ def image_to_string(image, lang=None, boxes=False):
                                              output_file_name_base,
                                              lang=lang,
                                              boxes=boxes)
-        return 'blah blah blah'
         if status:
             errors = get_errors(error_string)
             raise TesseractError(status, errors)
