@@ -14,9 +14,9 @@ import pytesseract
 import google
 
 DATA_DIR = 'data'
-KEEP_ALIVE_DELAY = 25
+KEEP_ALIVE_DELAY = 0
 MAX_IMAGE_SIZE = 800, 600
-MAX_IMAGES = 10
+MAX_IMAGES = 0
 MAX_DURATION = 300
 global start
 start = 0
@@ -116,10 +116,16 @@ def post():
         return '{0}'.format(e)
     image = Image.open(target)
     q = pytesseract.image_to_string(image)
+    answer = ''
     result = google.query(q)
-    answer= str(q) + '<br><br>' 
     for r in result:
-      answer = answer + str(r)+'<br>'
+      answer = (answer + '<a href="' + str(r[0]) + '">' 
+                + '<div class="result">'
+                + str(r[1]) + '<br>' 
+                + str(r[2]) + '<br>' 
+                + str(r[0]) + '<br>'
+                + '</div>'
+                + '</a>' + '<br>')
     return answer
 
     
@@ -166,6 +172,19 @@ def home():
     text-align:center;
   }
 
+  fieldset {
+
+  }
+
+  #status {
+    font-weight: 800;
+  }
+
+  .result {
+    text-align: left;
+    padding-left: 1em;
+  }
+
   a {
     color: #318ce7;
   }
@@ -197,19 +216,18 @@ def home():
 
 
 <h3>Print Share</h3>
-<p>Upload an image of an article and digitalized it.</p>
+<p>Share the web version of a print article</p>
 <!-- <p>Only the most recent %s images are saved.</p> -->
 
 
 <noscript>Note: You must have javascript enabled in order to upload and
 dynamically view new images.</noscript>
 <fieldset>
-  <p id="status">Select an image</p>
+  <p id="status">Upload an image</p>
   <div id="progressbar"></div>
   <input id="file" type="file" />
-  <div id="drop">or drop image here</div>
 </fieldset>
-<h3>Uploaded Images (updated in real-time)</h3>
+<h3>Your Picture</h3>
 <div id="images">%s</div>
 <script>
   function sse() {
@@ -218,11 +236,12 @@ dynamically view new images.</noscript>
           if (e.data == '')
               return;
           var data = $.parseJSON(e.data);
-          var upload_message = 'Image uploaded by ' + data['ip_addr'];
+          var upload_message = '';
           var image = $('<img>', {alt: upload_message, src: data['src']});
           var container = $('<div>').hide();
           container.append($('<div>', {text: upload_message}));
           container.append(image);
+          $('#images div:last-child').remove();
           $('#images').prepend(container);
           image.load(function(){
               container.show('blind', {}, 1000);
@@ -245,7 +264,7 @@ dynamically view new images.</noscript>
       xhr.onreadystatechange = function(e1) {
           if (this.readyState == 4)  {
               if (this.status == 200)
-                  var text = 'upload complete: ' + this.responseText;
+                  var text = 'Your Results' + this.responseText;
               else
                   var text = 'upload failed: code ' + this.status;
               status.html(text + '<br/>Select an image');
