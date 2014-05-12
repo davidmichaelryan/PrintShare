@@ -1,4 +1,4 @@
-#Prints the title, link, and snippet of the first three google search results for a given query
+#Prints the title, link, and snippet of the first five google search results for a given query
 # by loading the JSON results of a Google Custom Search through yaml
 
 import urllib2
@@ -32,14 +32,12 @@ def query(q):
         data = yaml.load(data)
         if 'items' not in data:
             return 'could not find queries'
-    results = []
+    results = [[] for x in xrange(5)]
     for i in range(len(data['items'])):
-        if i > 5:
+        if i >= 5:
             break
         else:
-            results.append(data['items'][i]['link'])
-    return results
-
-if __name__ == '__main__':
-    text = "Alien Worlds on E213rth Astrobiologlst Chris McKay searches extreme landscapes for clues about life on other planets."
-    print query(text)    
+            results[i].append(data['items'][i]['link'])
+            results[i].append(data['items'][i]['title'])
+            results[i].append(data['items'][i]['displayLink'])
+    return results 
