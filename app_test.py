@@ -120,7 +120,7 @@ def post():
     answer = ''
     result = google.query(q)
     for r in result:
-      answer = (answer + '<a href="' + str(r[0]) + '">' 
+      answer = (answer + '<a href="http://twitter.com/home/?status=' + str(r[0]) + '">' 
                 + '<div class="result">'
                 + str(r[1]) + '<br>' 
                 + str(r[2]) + '<br>' 
