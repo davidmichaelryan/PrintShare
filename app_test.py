@@ -160,7 +160,11 @@ def home():
 <meta charset="utf-8" />
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"></script>
+
+
 <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/themes/vader/jquery-ui.css" />
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='jquery.Jcrop.min.css')}}">
+
 <style>
   body {
     max-width: 800px;
@@ -222,32 +226,15 @@ def home():
 
 <noscript>Note: You must have javascript enabled in order to upload and
 dynamically view new images.</noscript>
-<fieldset>
+<form>
   <p id="status">Upload an image</p>
   <div id="progressbar"></div>
   <input id="file" type="file" />
-</fieldset>
+</form>
 <h3>Your Picture</h3>
+<img src="" id='crop-image'/>
 <div id="images">%s</div>
 <script>
-  function sse() {
-      var source = new EventSource('/stream');
-      source.onmessage = function(e) {
-          if (e.data == '')
-              return;
-          var data = $.parseJSON(e.data);
-          var upload_message = '';
-          var image = $('<img>', {alt: upload_message, src: data['src']});
-          var container = $('<div>').hide();
-          container.append($('<div>', {text: upload_message}));
-          container.append(image);
-          $('#images div:last-child').remove();
-          $('#images').prepend(container);
-          image.load(function(){
-              container.show('blind', {}, 1000);
-          });
-      };
-  }
   function file_select_handler(to_upload) {
       var progressbar = $('#progressbar');
       var status = $('#status');
@@ -271,6 +258,8 @@ dynamically view new images.</noscript>
               progressbar.progressbar('destroy');
           }
       };
+      console.log(to_upload);
+
       xhr.open('POST', '/post', true);
       xhr.send(to_upload);
   };
@@ -291,17 +280,6 @@ dynamically view new images.</noscript>
       file_select_handler(e.target.files[0]);
       e.target.value = '';
   });
-  sse();
-
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-510348-17']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
 </script>
 """ % (MAX_IMAGES, '\n'.join(images))
 
