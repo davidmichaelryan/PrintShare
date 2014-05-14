@@ -116,7 +116,6 @@ def post():
         return '{0}'.format(e)
     image = Image.open(target)
     q = pytesseract.image_to_string(image)
-    return q
     answer = ''
     result = google.query(q)
     for r in result:
