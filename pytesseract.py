@@ -68,7 +68,6 @@ def run_tesseract(input_filename, output_filename_base, lang=None, boxes=False):
 
     if boxes:
         command += ['batch.nochop', 'makebox']
-    return 'got to right here'
     proc = subprocess.Popen(command,
             stderr=subprocess.PIPE)
     return (proc.wait(), proc.stderr.read())
