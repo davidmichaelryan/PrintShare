@@ -131,10 +131,10 @@ def post():
     
 
 
-@app.route('/stream')
-def stream():
-    return flask.Response(event_stream(flask.request.access_route[0]),
-                          mimetype='text/event-stream')
+# @app.route('/stream')
+# def stream():
+#     return flask.Response(event_stream(flask.request.access_route[0]),
+#                           mimetype='text/event-stream')
 
 
 @app.route('/')
