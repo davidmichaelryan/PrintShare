@@ -114,6 +114,9 @@ def post():
             broadcast(message)  # Notify subscribers of completion
     except Exception as e:  # Output errors
         return '{0}'.format(e)
+
+    #need to stop this here and add image cropping
+
     image = Image.open(target)
     q = pytesseract.image_to_string(image)
     answer = ''
@@ -163,7 +166,8 @@ def home():
 
 
 <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/themes/vader/jquery-ui.css" />
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='jquery.Jcrop.min.css')}}">
+<link rel=stylesheet type=text/css href="https://raw.githubusercontent.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.min.css">
+<script src="https://raw.githubusercontent.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.min.js"></script>
 
 <style>
   body {
@@ -262,6 +266,9 @@ dynamically view new images.</noscript>
 
       xhr.open('POST', '/post', true);
       xhr.send(to_upload);
+
+      
+
   };
   function handle_hover(e) {
       e.originalEvent.stopPropagation();
