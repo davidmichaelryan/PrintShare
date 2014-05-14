@@ -1,2 +1,2 @@
-https://github.com/heroku/heroku-buildpack-python
-https://github.com/davidmichaelryan/tesseract-ocr
+https://github.com/fouady/heroku-buildpack-tesseract.git
+https://github.com/heroku/heroku-buildpack-python.git
