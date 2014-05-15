@@ -45,22 +45,26 @@ def post():
 	    #print flask.request.data
     except Exception as e:  # Output errors
         return '{0}'.format(e)
-
-    #need to stop this here and add image cropping
     return target
-    # image = Image.open(target)
-    # q = pytesseract.image_to_string(image)
-    # answer = ''
-    # result = google.query(q)
-    # for r in result:
-    #   answer = (answer + '<a href="http://twitter.com/home/?status=' + str(r[0]) + '">' 
-    #             + '<div class="result">'
-    #             + str(r[1]) + '<br>' 
-    #             + str(r[2]) + '<br>' 
-    #             + str(r[0]) + '<br>'
-    #             + '</div>'
-    #             + '</a>' + '<br>')
-    # return answer
+
+@app.route('/crop', methods=['GET']) 
+def crop():   
+    image = Image.open(target)
+
+    #CROP HERE
+
+    q = pytesseract.image_to_string(image)
+    answer = ''
+    result = google.query(q)
+    for r in result:
+      answer = (answer + '<a href="http://twitter.com/home/?status=' + str(r[0]) + '">' 
+                + '<div class="result">'
+                + str(r[1]) + '<br>' 
+                + str(r[2]) + '<br>' 
+                + str(r[0]) + '<br>'
+                + '</div>'
+                + '</a>' + '<br>')
+    return answer
 
     
 @app.route('/')
@@ -148,8 +152,11 @@ dynamically view new images.</noscript>
 </form>
 
 <h3>Your Picture</h3>
-<img src="" id='crop-image'/>
-<div id="images"></div>
+
+<form>
+  <img src="" id='crop-image'/>
+  <button id="crop-submit" style="display:none" type="submit">Submit</button>
+</form>
 
 <script>
   var targetURL = ''
@@ -176,8 +183,12 @@ dynamically view new images.</noscript>
                   var text = 'upload failed: code ' + this.status;
               status.html(text + '<br/>Select an image');
               progressbar.progressbar('destroy');
+
               $('#crop-image').attr('src', targetURL);
-              $('#crop-image').Jcrop();
+              $('#crop-image').Jcrop({
+                  onSelect: offerSubmit,
+                  onChange: offerSubmit
+                });
           }
       };
       xhr.open('POST', '/post', true);
@@ -185,13 +196,24 @@ dynamically view new images.</noscript>
 
   };
 
+  function offerSubmit(c){
+    $("#crop-submit").css('display', 'block')
+    left = c.x
+    top = c.y
+    right = c.x2
+    bottom = c.y2
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/crop?', true)
+    xhr.send()
+  }
+
   $('#file').change(function(e){
       file_select_handler(e.target.files[0]);
       e.target.value = '';
   });
 </script>
 """ 
-
 
 if __name__ == '__main__':
     app.debug = True
