@@ -10,12 +10,8 @@ import pytesseract
 import google
 
 DATA_DIR = 'data'
-KEEP_ALIVE_DELAY = 0
 MAX_IMAGE_SIZE = 800, 600
-MAX_IMAGES = 0
-MAX_DURATION = 300
-global start
-start = 0
+
 
 app = flask.Flask(__name__, static_folder=DATA_DIR)
 
