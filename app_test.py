@@ -12,14 +12,7 @@ import google
 DATA_DIR = 'data'
 MAX_IMAGE_SIZE = 800, 600
 
-
 app = flask.Flask(__name__, static_folder=DATA_DIR)
-
-try:  # Reset saved files on each start
-    rmtree(DATA_DIR, True)
-    os.mkdir(DATA_DIR)
-except OSError:
-    pass
 
 def safe_addr(ip_addr):
     """Strip of the trailing two octets of the IP address."""
@@ -54,26 +47,31 @@ def post():
         return '{0}'.format(e)
 
     #need to stop this here and add image cropping
-
-    image = Image.open(target)
-    q = pytesseract.image_to_string(image)
-    answer = ''
-    result = google.query(q)
-    for r in result:
-      answer = (answer + '<a href="http://twitter.com/home/?status=' + str(r[0]) + '">' 
-                + '<div class="result">'
-                + str(r[1]) + '<br>' 
-                + str(r[2]) + '<br>' 
-                + str(r[0]) + '<br>'
-                + '</div>'
-                + '</a>' + '<br>')
-    return answer
+    return target
+    # image = Image.open(target)
+    # q = pytesseract.image_to_string(image)
+    # answer = ''
+    # result = google.query(q)
+    # for r in result:
+    #   answer = (answer + '<a href="http://twitter.com/home/?status=' + str(r[0]) + '">' 
+    #             + '<div class="result">'
+    #             + str(r[1]) + '<br>' 
+    #             + str(r[2]) + '<br>' 
+    #             + str(r[0]) + '<br>'
+    #             + '</div>'
+    #             + '</a>' + '<br>')
+    # return answer
 
     
 @app.route('/')
 def home():
-    
-    return """
+  try:  # Reset saved files on each start
+    rmtree(DATA_DIR, True)
+    os.mkdir(DATA_DIR)
+  except OSError:
+    pass
+
+  return """
 <!doctype html>
 <title>Print Share</title>
 <meta charset="utf-8" />
@@ -82,7 +80,7 @@ def home():
 
 <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/themes/vader/jquery-ui.css" />
 <link rel=stylesheet type=text/css href="https://raw.githubusercontent.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.min.css">
-<script src="https://raw.githubusercontent.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.min.js"></script>
+<script src="https://raw.githubusercontent.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.js"></script>
 
 <style>
   body {
@@ -154,6 +152,7 @@ dynamically view new images.</noscript>
 <div id="images"></div>
 
 <script>
+  var targetURL = ''
   function file_select_handler(to_upload) {
       var progressbar = $('#progressbar');
       var status = $('#status');
@@ -169,35 +168,23 @@ dynamically view new images.</noscript>
       });
       xhr.onreadystatechange = function(e1) {
           if (this.readyState == 4)  {
-              if (this.status == 200)
+              if (this.status == 200){
                   var text = 'Your Results' + this.responseText;
+                  targetURL = this.responseText
+              }
               else
                   var text = 'upload failed: code ' + this.status;
               status.html(text + '<br/>Select an image');
               progressbar.progressbar('destroy');
+              $('#crop-image').attr('src', targetURL);
+              $('#crop-image').Jcrop();
           }
       };
-      console.log(to_upload);
-
       xhr.open('POST', '/post', true);
       xhr.send(to_upload);
 
-
-
   };
-  function handle_hover(e) {
-      e.originalEvent.stopPropagation();
-      e.originalEvent.preventDefault();
-      e.target.className = (e.type == 'dragleave' || e.type == 'drop') ? '' : 'hover';
-  }
 
-  $('#drop').bind('drop', function(e) {
-      handle_hover(e);
-      if (e.originalEvent.dataTransfer.files.length < 1) {
-          return;
-      }
-      file_select_handler(e.originalEvent.dataTransfer.files[0]);
-  }).bind('dragenter dragleave dragover', handle_hover);
   $('#file').change(function(e){
       file_select_handler(e.target.files[0]);
       e.target.value = '';
