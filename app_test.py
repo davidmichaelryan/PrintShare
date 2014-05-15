@@ -3,12 +3,8 @@ import json
 import os
 import time
 from PIL import Image, ImageFile
-from gevent.event import AsyncResult, Timeout
-from gevent.queue import Empty, Queue
 from shutil import rmtree
 from hashlib import sha1
-from stat import S_ISREG, ST_CTIME, ST_MODE
-
 
 import pytesseract
 import google
@@ -22,8 +18,6 @@ global start
 start = 0
 
 app = flask.Flask(__name__, static_folder=DATA_DIR)
-broadcast_queue = Queue()
-
 
 try:  # Reset saved files on each start
     rmtree(DATA_DIR, True)
@@ -31,47 +25,9 @@ try:  # Reset saved files on each start
 except OSError:
     pass
 
-
-def broadcast(message):
-    """Notify all waiting waiting gthreads of message."""
-    waiting = []
-    try:
-        while True:
-            waiting.append(broadcast_queue.get(block=False))
-    except Empty:
-        pass
-    print('Broadcasting {0} messages'.format(len(waiting)))
-    for item in waiting:
-        item.set(message)
-
-
-def receive():
-    """Generator that yields a message at least every KEEP_ALIVE_DELAY seconds.
-
-    yields messages sent by `broadcast`.
-
-    """
-    now = time.time()
-    end = now + MAX_DURATION
-    tmp = None
-    # Heroku doesn't notify when client disconnect so we have to impose a
-    # maximum connection duration.
-    while now < end:
-        if not tmp:
-            tmp = AsyncResult()
-            broadcast_queue.put(tmp)
-        try:
-            yield tmp.get(timeout=KEEP_ALIVE_DELAY)
-            tmp = None
-        except Timeout:
-            yield ''
-        now = time.time()
-
-
 def safe_addr(ip_addr):
     """Strip of the trailing two octets of the IP address."""
     return '.'.join(ip_addr.split('.')[:2] + ['xxx', 'xxx'])
-
 
 def save_normalized_image(path, data):
     image_parser = ImageFile.Parser()
@@ -87,19 +43,6 @@ def save_normalized_image(path, data):
     image.save(path)
     return True
 
-
-def event_stream(client):
-    force_disconnect = False
-    try:
-        for message in receive():
-            yield 'data: {0}\n\n'.format(message)
-        print('{0} force closing stream'.format(client))
-        force_disconnect = True
-    finally:
-        if not force_disconnect:
-            print('{0} disconnected from stream'.format(client))
-
-
 @app.route('/post', methods=['POST'])
 def post():
     global start
@@ -111,7 +54,6 @@ def post():
         if save_normalized_image(target, flask.request.data):
 	    print target
 	    #print flask.request.data
-            broadcast(message)  # Notify subscribers of completion
     except Exception as e:  # Output errors
         return '{0}'.format(e)
 
@@ -132,38 +74,15 @@ def post():
     return answer
 
     
-
-
-# @app.route('/stream')
-# def stream():
-#     return flask.Response(event_stream(flask.request.access_route[0]),
-#                           mimetype='text/event-stream')
-
-
 @app.route('/')
 def home():
-    # Code adapted from: http://stackoverflow.com/questions/168409/
-    image_infos = []
-    for filename in os.listdir(DATA_DIR):
-        filepath = os.path.join(DATA_DIR, filename)
-        file_stat = os.stat(filepath)
-        if S_ISREG(file_stat[ST_MODE]):
-            image_infos.append((file_stat[ST_CTIME], filepath))
-
-    images = []
-    for i, (_, path) in enumerate(sorted(image_infos, reverse=True)):
-        if i >= MAX_IMAGES:
-            os.unlink(path)
-            continue
-        images.append('<div><img alt="User uploaded image" src="{0}" /></div>'
-                      .format(path))
+    
     return """
 <!doctype html>
 <title>Print Share</title>
 <meta charset="utf-8" />
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"></script>
-
 
 <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/themes/vader/jquery-ui.css" />
 <link rel=stylesheet type=text/css href="https://raw.githubusercontent.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.min.css">
@@ -225,8 +144,6 @@ def home():
 
 <h3>Print Share</h3>
 <p>Share the web version of a print article</p>
-<!-- <p>Only the most recent %s images are saved.</p> -->
-
 
 <noscript>Note: You must have javascript enabled in order to upload and
 dynamically view new images.</noscript>
@@ -235,9 +152,11 @@ dynamically view new images.</noscript>
   <div id="progressbar"></div>
   <input id="file" type="file" />
 </form>
+
 <h3>Your Picture</h3>
 <img src="" id='crop-image'/>
-<div id="images">%s</div>
+<div id="images"></div>
+
 <script>
   function file_select_handler(to_upload) {
       var progressbar = $('#progressbar');
@@ -267,7 +186,7 @@ dynamically view new images.</noscript>
       xhr.open('POST', '/post', true);
       xhr.send(to_upload);
 
-      
+
 
   };
   function handle_hover(e) {
@@ -288,7 +207,7 @@ dynamically view new images.</noscript>
       e.target.value = '';
   });
 </script>
-""" % (MAX_IMAGES, '\n'.join(images))
+""" 
 
 
 if __name__ == '__main__':
