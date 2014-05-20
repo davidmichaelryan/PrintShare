@@ -48,10 +48,14 @@ def post():
     return target
 
 @app.route('/crop', methods=['GET']) 
-def crop():   
+def crop(): 
+    sha1sum = sha1(flask.request.data).hexdigest()
+    target = os.path.join(DATA_DIR, '{0}.jpg'.format(sha1sum))  
     image = Image.open(target)
 
     #CROP HERE
+
+
 
     q = pytesseract.image_to_string(image)
     answer = ''
@@ -87,8 +91,6 @@ def home():
 <script src="https://rawgit.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.js"></script>
 <link rel="stylesheet" href="https://rawgit.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.min.css" type="text/css" />
 
-<link rel="stylesheet" type="text/css" href="/resources/jquery.Jcrop.min.css">
-<script src="/resources/jquery.Jcrop.js"></script>
 
 <style>
   body {
@@ -202,13 +204,13 @@ dynamically view new images.</noscript>
 
   function offerSubmit(c){
     $("#crop-submit").css('display', 'block')
-    left = c.x
-    top = c.y
-    right = c.x2
-    bottom = c.y2
+    l = c.x
+    t = c.y
+    r = c.x2
+    b = c.y2
     
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/crop?', true)
+    xhr.open('GET', '/crop', true)
     xhr.send()
   }
 
