@@ -5,6 +5,7 @@ import time
 from PIL import Image, ImageFile
 from shutil import rmtree
 from hashlib import sha1
+from flask import request 
 
 import pytesseract
 import google
@@ -47,13 +48,19 @@ def post():
         return '{0}'.format(e)
     return target
 
-@app.route('/crop', methods=['GET']) 
-def crop():   
+@app.route('/crop', methods=['POST']) 
+def crop_ajax():    
+
+    left = request.form['left'] 
+    upper = request.form['upper'] 
+    right = request.form['right'] 
+    lower = request.form['lower'] 
+    target = request.form['target'] 
+
     image = Image.open(target)
+    croppedImage = image.crop((int(left), int(upper), int(right), int(lower)))
 
-    #CROP HERE
-
-    q = pytesseract.image_to_string(image)
+    q = pytesseract.image_to_string(croppedImage)
     answer = ''
     result = google.query(q)
     for r in result:
@@ -87,8 +94,6 @@ def home():
 <script src="https://rawgit.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.js"></script>
 <link rel="stylesheet" href="https://rawgit.com/davidmichaelryan/PrintShare/master/resources/jquery.Jcrop.min.css" type="text/css" />
 
-<link rel="stylesheet" type="text/css" href="/resources/jquery.Jcrop.min.css">
-<script src="/resources/jquery.Jcrop.js"></script>
 
 <style>
   body {
@@ -159,7 +164,7 @@ dynamically view new images.</noscript>
 
 <form>
   <img src="" id='crop-image'/>
-  <button id="crop-submit" style="display:none" type="submit">Submit</button>
+  <div id="crop-submit" style="display:none">Submit</div>
 </form>
 
 <script>
@@ -180,7 +185,7 @@ dynamically view new images.</noscript>
       xhr.onreadystatechange = function(e1) {
           if (this.readyState == 4)  {
               if (this.status == 200){
-                  var text = 'Your Results' + this.responseText;
+                  var text = 'Your Results: ' + this.responseText;
                   targetURL = this.responseText
               }
               else
@@ -202,14 +207,22 @@ dynamically view new images.</noscript>
 
   function offerSubmit(c){
     $("#crop-submit").css('display', 'block')
-    left = c.x
-    top = c.y
-    right = c.x2
-    bottom = c.y2
-    
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/crop?', true)
-    xhr.send()
+
+    $('#crop-submit').unbind().click(function (){
+          var target = $('#crop-image')
+
+          console.log('')
+          console.log(c.x)
+          console.log(c.y)
+          console.log(c.x2)
+          console.log(c.y2)
+          console.log(targetURL)
+
+          $.post('/crop', {target: targetURL, left: c.x, upper: c.y, right: c.x2, lower: c.y2}, function(reply){
+            $('#status').html(reply)
+            })
+      })
+
   }
 
   $('#file').change(function(e){
