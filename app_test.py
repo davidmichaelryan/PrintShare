@@ -9,9 +9,22 @@ from flask import request
 
 import pytesseract
 import google
+from flask import Flask, redirect, url_for
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 DATA_DIR = 'data'
 MAX_IMAGE_SIZE = 800, 600
+
+global q1
+global q2
+global q3
+global q4
+q1 = ''
+q2 = ''
+q3 = ''
+q4 = ''
 
 app = flask.Flask(__name__, static_folder=DATA_DIR)
 
@@ -33,6 +46,18 @@ def save_normalized_image(path, data):
     image.save(path)
     return True
 
+@app.route('/refine', methods=['GET', 'POST'])
+def refine():
+    global q1 
+    q1 = flask.request.form['q1']
+    global q2 
+    q2 = flask.request.form['q2']
+    global q3 
+    q3 = flask.request.form['q3']
+    global q4 
+    q4 = flask.request.form['q4']
+    return redirect(url_for('home'))
+
 @app.route('/post', methods=['POST'])
 def post():
     global start
@@ -50,7 +75,11 @@ def post():
 
 @app.route('/crop', methods=['POST']) 
 def crop_ajax():    
-
+    
+    global q1
+    global q2
+    global q3
+    global q4
     left = request.form['left'] 
     upper = request.form['upper'] 
     right = request.form['right'] 
@@ -61,6 +90,11 @@ def crop_ajax():
     croppedImage = image.crop((int(left), int(upper), int(right), int(lower)))
 
     q = pytesseract.image_to_string(croppedImage)
+    q = ' '+q1+' '+q2+' '+q3+' '+q4+' '+q
+    q1=''
+    q2=''
+    q3=''
+    q4=''
     answer = ''
     result = google.query(q)
     for r in result:
@@ -104,6 +138,9 @@ def home():
     color: #318ce7;
     font: 16px/1.6 menlo, monospace;
     text-align:center;
+  }
+  #textbox {
+    text-align:left;
   }
 
   fieldset {
@@ -158,6 +195,17 @@ dynamically view new images.</noscript>
   <p id="status">Upload an image</p>
   <div id="progressbar"></div>
   <input id="file" type="file" />
+</form>
+<form id="textbox" action="refine" method="POST">
+            <p><input type="text" name="q1">Publication</input>
+            </p>
+	    <p><input type="text" name="q2">Author</input>
+            </p>
+	    <p><input type="text" name="q3">Date</input>
+            </p>
+	    <p><input type="text" name="q4">Other Keywords</input>
+            <input type="submit" value="submit" /></p>
+
 </form>
 
 <h3>Your Picture</h3>
