@@ -196,7 +196,8 @@ dynamically view new images.</noscript>
               $('#crop-image').attr('src', targetURL);
               $('#crop-image').Jcrop({
                   onSelect: offerSubmit,
-                  onChange: offerSubmit
+                  onChange: offerSubmit, 
+                  setSelect: [0,0,9999,9999]
                 });
           }
       };
