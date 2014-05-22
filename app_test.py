@@ -5,12 +5,26 @@ import time
 from PIL import Image, ImageFile
 from shutil import rmtree
 from hashlib import sha1
+from flask import request 
 
 import pytesseract
 import google
+from flask import Flask, redirect, url_for
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 DATA_DIR = 'data'
 MAX_IMAGE_SIZE = 800, 600
+
+global q1
+global q2
+global q3
+global q4
+q1 = ''
+q2 = ''
+q3 = ''
+q4 = ''
 
 app = flask.Flask(__name__, static_folder=DATA_DIR)
 
@@ -32,6 +46,18 @@ def save_normalized_image(path, data):
     image.save(path)
     return True
 
+@app.route('/refine', methods=['GET', 'POST'])
+def refine():
+    global q1 
+    q1 = flask.request.form['q1']
+    global q2 
+    q2 = flask.request.form['q2']
+    global q3 
+    q3 = flask.request.form['q3']
+    global q4 
+    q4 = flask.request.form['q4']
+    return redirect(url_for('home'))
+
 @app.route('/post', methods=['POST'])
 def post():
     global start
@@ -47,17 +73,28 @@ def post():
         return '{0}'.format(e)
     return target
 
-@app.route('/crop', methods=['GET']) 
-def crop(): 
-    sha1sum = sha1(flask.request.data).hexdigest()
-    target = os.path.join(DATA_DIR, '{0}.jpg'.format(sha1sum))  
+@app.route('/crop', methods=['POST']) 
+def crop_ajax():    
+    
+    global q1
+    global q2
+    global q3
+    global q4
+    left = request.form['left'] 
+    upper = request.form['upper'] 
+    right = request.form['right'] 
+    lower = request.form['lower'] 
+    target = request.form['target'] 
+
     image = Image.open(target)
+    croppedImage = image.crop((int(left), int(upper), int(right), int(lower)))
 
-    #CROP HERE
-
-
-
-    q = pytesseract.image_to_string(image)
+    q = pytesseract.image_to_string(croppedImage)
+    q = ' '+q1+' '+q2+' '+q3+' '+q4+' '+q
+    q1=''
+    q2=''
+    q3=''
+    q4=''
     answer = ''
     result = google.query(q)
     for r in result:
@@ -101,6 +138,9 @@ def home():
     color: #318ce7;
     font: 16px/1.6 menlo, monospace;
     text-align:center;
+  }
+  #textbox {
+    text-align:left;
   }
 
   fieldset {
@@ -156,12 +196,23 @@ dynamically view new images.</noscript>
   <div id="progressbar"></div>
   <input id="file" type="file" />
 </form>
+<form id="textbox" action="refine" method="POST">
+            <p><input type="text" name="q1">Publication</input>
+            </p>
+	    <p><input type="text" name="q2">Author</input>
+            </p>
+	    <p><input type="text" name="q3">Date</input>
+            </p>
+	    <p><input type="text" name="q4">Other Keywords</input>
+            <input type="submit" value="submit" /></p>
+
+</form>
 
 <h3>Your Picture</h3>
 
 <form>
   <img src="" id='crop-image'/>
-  <button id="crop-submit" style="display:none" type="submit">Submit</button>
+  <div id="crop-submit" style="display:none">Submit</div>
 </form>
 
 <script>
@@ -182,7 +233,7 @@ dynamically view new images.</noscript>
       xhr.onreadystatechange = function(e1) {
           if (this.readyState == 4)  {
               if (this.status == 200){
-                  var text = 'Your Results' + this.responseText;
+                  var text = 'Your Results: ' + this.responseText;
                   targetURL = this.responseText
               }
               else
@@ -204,14 +255,22 @@ dynamically view new images.</noscript>
 
   function offerSubmit(c){
     $("#crop-submit").css('display', 'block')
-    l = c.x
-    t = c.y
-    r = c.x2
-    b = c.y2
-    
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/crop', true)
-    xhr.send()
+
+    $('#crop-submit').unbind().click(function (){
+          var target = $('#crop-image')
+
+          console.log('')
+          console.log(c.x)
+          console.log(c.y)
+          console.log(c.x2)
+          console.log(c.y2)
+          console.log(targetURL)
+
+          $.post('/crop', {target: targetURL, left: c.x, upper: c.y, right: c.x2, lower: c.y2}, function(reply){
+            $('#status').html(reply)
+            })
+      })
+
   }
 
   $('#file').change(function(e){
