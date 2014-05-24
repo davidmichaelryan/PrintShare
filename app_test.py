@@ -46,18 +46,6 @@ def save_normalized_image(path, data):
     image.save(path)
     return True
 
-@app.route('/refine', methods=['GET', 'POST'])
-def refine():
-    global q1 
-    q1 = flask.request.form['q1']
-    global q2 
-    q2 = flask.request.form['q2']
-    global q3 
-    q3 = flask.request.form['q3']
-    global q4 
-    q4 = flask.request.form['q4']
-    return redirect(url_for('home'))
-
 @app.route('/post', methods=['POST'])
 def post():
     global start
@@ -66,25 +54,30 @@ def post():
     message = json.dumps({'src': target,
                           'ip_addr': safe_addr(flask.request.access_route[0])})
     try:
-        if save_normalized_image(target, flask.request.data):
-	    print target
-	    #print flask.request.data
+      if save_normalized_image(target, flask.request.data):
+        print target
+        #print flask.request.data
     except Exception as e:  # Output errors
-        return '{0}'.format(e)
+      return '{0}'.format(e)
     return target
 
 @app.route('/crop', methods=['POST']) 
 def crop_ajax():    
     
-    global q1
-    global q2
-    global q3
-    global q4
+    global q1 
+    q1 = request.form['q1']
+    global q2 
+    q2 = request.form['q2']
+    global q3 
+    q3 = request.form['q3']
+    global q4 
+    q4 = request.form['q4']
     left = request.form['left'] 
     upper = request.form['upper'] 
     right = request.form['right'] 
     lower = request.form['lower'] 
     target = request.form['target'] 
+
 
     image = Image.open(target)
     croppedImage = image.crop((int(left), int(upper), int(right), int(lower)))
@@ -196,23 +189,17 @@ dynamically view new images.</noscript>
   <div id="progressbar"></div>
   <input id="file" type="file" />
 </form>
-<form id="textbox" action="refine" method="POST">
-            <p><input type="text" name="q1">Publication</input>
-            </p>
-	    <p><input type="text" name="q2">Author</input>
-            </p>
-	    <p><input type="text" name="q3">Date</input>
-            </p>
-	    <p><input type="text" name="q4">Other Keywords</input>
-            <input type="submit" value="submit" /></p>
-
-</form>
 
 <h3>Your Picture</h3>
 
 <form>
   <img src="" id='crop-image'/>
   <div id="crop-submit" style="display:none">Submit</div>
+
+  <p style="display:none" id="q1"><input type="text" name="q1" id="text1">Publication</input></p>
+  <p style="display:none" id="q2"><input type="text" name="q2" id="text2">Author</input></p>
+  <p style="display:none" id="q3"><input type="text" name="q3" id="text3">Date</input></p>
+  <p style="display:none" id="q4"><input type="text" name="q4" id="text4">Other Keywords</input>
 </form>
 
 <script>
@@ -244,7 +231,8 @@ dynamically view new images.</noscript>
               $('#crop-image').attr('src', targetURL);
               $('#crop-image').Jcrop({
                   onSelect: offerSubmit,
-                  onChange: offerSubmit
+                  onChange: offerSubmit, 
+                  setSelect: [0,0,9999,9999]
                 });
           }
       };
@@ -254,23 +242,25 @@ dynamically view new images.</noscript>
   };
 
   function offerSubmit(c){
-    $("#crop-submit").css('display', 'block')
+    $("#crop-submit").css('display', 'block');
+    $("#q1").css('display', 'block');
+    $("#q2").css('display', 'block');
+    $("#q3").css('display', 'block');
+    $("#q4").css('display', 'block');
 
     $('#crop-submit').unbind().click(function (){
           var target = $('#crop-image')
+          var pub = $('#text1').val();
+          var author = $('#text2').val();
+          var date = $('#text3').val();
+          var other = $('#text4').val();
 
-          console.log('')
-          console.log(c.x)
-          console.log(c.y)
-          console.log(c.x2)
-          console.log(c.y2)
-          console.log(targetURL)
-
-          $.post('/crop', {target: targetURL, left: c.x, upper: c.y, right: c.x2, lower: c.y2}, function(reply){
+          $.post('/crop', {target: targetURL, left: c.x, upper: c.y, right: c.x2, lower: c.y2,
+                            q1: pub, q2: author, q3: date, q4: other},
+                            function(reply){
             $('#status').html(reply)
             })
       })
-
   }
 
   $('#file').change(function(e){
@@ -283,4 +273,3 @@ dynamically view new images.</noscript>
 if __name__ == '__main__':
     app.debug = True
     app.run('0.0.0.0', threaded=True)
-
