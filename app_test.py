@@ -198,6 +198,7 @@ h3 {
 
 <h3>Print Share</h3>
 <p>Share the web version of a print article</p>
+<p id="status"></p>
 
 <h3 id="image-header">Your Picture</h3>
 
@@ -230,7 +231,6 @@ dynamically view new images.</noscript>
       var status = $('#status');
       var xhr = new XMLHttpRequest();
       xhr.upload.addEventListener('loadstart', function(e1){
-          status.text('uploading image');
           progressbar.progressbar({max: e1.total});
       });
       xhr.upload.addEventListener('progress', function(e1){
@@ -241,12 +241,10 @@ dynamically view new images.</noscript>
       xhr.onreadystatechange = function(e1) {
           if (this.readyState == 4)  {
               if (this.status == 200){
-                  var text = 'Upload complete';
                   targetURL = this.responseText
               }
               else
                   var text = 'upload failed: code ' + this.status;
-              status.html(text + '<br/>Select an image');
               progressbar.progressbar('destroy');
 
               $('#crop-image').attr('src', targetURL);
