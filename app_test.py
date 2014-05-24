@@ -132,13 +132,6 @@ def home():
     font: 16px/1.6 menlo, monospace;
     text-align:center;
   }
-  #textbox {
-    text-align:left;
-  }
-
-  fieldset {
-
-  }
 
   #status {
     font-weight: 800;
@@ -169,11 +162,35 @@ def home():
     cursor: default;
 }
 
-#drop.hover {
-    color: #318ce7;
-    border-color: #318ce7;
-    border-style: solid;
-    box-shadow: inset 0 10px 20px #318ce7;
+.waitToShow {
+  text-align: left;
+  display: none;
+}
+
+#image-header {
+  display: none;
+}
+
+h3 {
+  text-align: center;
+}
+
+#crop-submit {
+  display: none;
+  cursor: pointer;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #318ce7;
+}
+
+#crop-submit:hover {
+  background: #ddd;
+}
+
+.jcrop-holder {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 </style>
@@ -182,24 +199,28 @@ def home():
 <h3>Print Share</h3>
 <p>Share the web version of a print article</p>
 
-<noscript>Note: You must have javascript enabled in order to upload and
-dynamically view new images.</noscript>
-<form>
-  <p id="status">Upload an image</p>
-  <div id="progressbar"></div>
-  <input id="file" type="file" />
-</form>
-
-<h3>Your Picture</h3>
+<h3 id="image-header">Your Picture</h3>
 
 <form>
   <img src="" id='crop-image'/>
-  <div id="crop-submit" style="display:none">Submit</div>
 
-  <p style="display:none" id="q1"><input type="text" name="q1" id="text1">Publication</input></p>
-  <p style="display:none" id="q2"><input type="text" name="q2" id="text2">Author</input></p>
-  <p style="display:none" id="q3"><input type="text" name="q3" id="text3">Date</input></p>
-  <p style="display:none" id="q4"><input type="text" name="q4" id="text4">Other Keywords</input>
+  <div id="crop-submit">Submit</div>
+
+  <p class="waitToShow">Have we not found it yet? Sorry about that! Help us narrow it down:</p>
+  <p id="q1" class="waitToShow">Publication<br><input type="text" name="q1" id="text1"></input></p>
+  <p id="q2" class="waitToShow">Author<br><input type="text" name="q2" id="text2"></input></p>
+  <p id="q3" class="waitToShow">Date<br><input type="text" name="q3" id="text3"></input></p>
+  <p id="q4" class="waitToShow">Other Keywords<br><input type="text" name="q4" id="text4"></input>
+  <br>
+  
+</form>
+
+<noscript>Note: You must have javascript enabled in order to upload and
+dynamically view new images.</noscript>
+<form>
+  <p>Upload an image</p>
+  <div id="progressbar"></div>
+  <input id="file" type="file" />
 </form>
 
 <script>
@@ -220,7 +241,7 @@ dynamically view new images.</noscript>
       xhr.onreadystatechange = function(e1) {
           if (this.readyState == 4)  {
               if (this.status == 200){
-                  var text = 'Your Results: ' + this.responseText;
+                  var text = 'Upload complete';
                   targetURL = this.responseText
               }
               else
@@ -243,10 +264,8 @@ dynamically view new images.</noscript>
 
   function offerSubmit(c){
     $("#crop-submit").css('display', 'block');
-    $("#q1").css('display', 'block');
-    $("#q2").css('display', 'block');
-    $("#q3").css('display', 'block');
-    $("#q4").css('display', 'block');
+    $(".waitToShow").css('display', 'block');
+    $("#image-header").css('display', 'initial');
 
     $('#crop-submit').unbind().click(function (){
           var target = $('#crop-image')
