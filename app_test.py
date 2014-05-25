@@ -91,11 +91,15 @@ def crop_ajax():
     answer = ''
     result = google.query(q)
     for r in result:
-      answer = (answer + '<a href="http://twitter.com/home/?status=' + str(r[0]) + '">' 
+      answer = (answer + '<a href="' + str(r[0]) + '">'
                 + '<div class="result">'
                 + str(r[1]) + '<br>' 
                 + str(r[2]) + '<br>' 
                 + str(r[0]) + '<br>'
+                + '</div>'
+		+ '<a href="http://twitter.com/home/?status=' + str(r[0]) +'">'
+		+ '<div class="tweet">'
+		+ "Tweet it" + '<br>' 
                 + '</div>'
                 + '</a>' + '<br>')
     return answer
@@ -140,6 +144,11 @@ def home():
   .result {
     text-align: left;
     padding-left: 1em;
+  }
+  .tweet {
+    text-align: right;
+    padding-right: 1em;
+
   }
 
   a {
