@@ -46,18 +46,6 @@ def save_normalized_image(path, data):
     image.save(path)
     return True
 
-@app.route('/refine', methods=['GET', 'POST'])
-def refine():
-    global q1 
-    q1 = flask.request.form['q1']
-    global q2 
-    q2 = flask.request.form['q2']
-    global q3 
-    q3 = flask.request.form['q3']
-    global q4 
-    q4 = flask.request.form['q4']
-    return redirect(url_for('home'))
-
 @app.route('/post', methods=['POST'])
 def post():
     global start
@@ -66,25 +54,30 @@ def post():
     message = json.dumps({'src': target,
                           'ip_addr': safe_addr(flask.request.access_route[0])})
     try:
-        if save_normalized_image(target, flask.request.data):
-	    print target
-	    #print flask.request.data
+      if save_normalized_image(target, flask.request.data):
+        print target
+        #print flask.request.data
     except Exception as e:  # Output errors
-        return '{0}'.format(e)
+      return '{0}'.format(e)
     return target
 
 @app.route('/crop', methods=['POST']) 
 def crop_ajax():    
     
-    global q1
-    global q2
-    global q3
-    global q4
+    global q1 
+    q1 = request.form['q1']
+    global q2 
+    q2 = request.form['q2']
+    global q3 
+    q3 = request.form['q3']
+    global q4 
+    q4 = request.form['q4']
     left = request.form['left'] 
     upper = request.form['upper'] 
     right = request.form['right'] 
     lower = request.form['lower'] 
     target = request.form['target'] 
+
 
     image = Image.open(target)
     croppedImage = image.crop((int(left), int(upper), int(right), int(lower)))
@@ -98,11 +91,15 @@ def crop_ajax():
     answer = ''
     result = google.query(q)
     for r in result:
-      answer = (answer + '<a href="http://twitter.com/home/?status=' + str(r[0]) + '">' 
+      answer = (answer + '<a href="' + str(r[0]) + '">'
                 + '<div class="result">'
                 + str(r[1]) + '<br>' 
                 + str(r[2]) + '<br>' 
                 + str(r[0]) + '<br>'
+                + '</div>'
+		+ '<a href="http://twitter.com/home/?status=' + str(r[0]) +'">'
+		+ '<div class="tweet">'
+		+ "Tweet it" + '<br>' 
                 + '</div>'
                 + '</a>' + '<br>')
     return answer
@@ -139,13 +136,6 @@ def home():
     font: 16px/1.6 menlo, monospace;
     text-align:center;
   }
-  #textbox {
-    text-align:left;
-  }
-
-  fieldset {
-
-  }
 
   #status {
     font-weight: 800;
@@ -154,6 +144,11 @@ def home():
   .result {
     text-align: left;
     padding-left: 1em;
+  }
+  .tweet {
+    text-align: right;
+    padding-right: 1em;
+
   }
 
   a {
@@ -176,11 +171,35 @@ def home():
     cursor: default;
 }
 
-#drop.hover {
-    color: #318ce7;
-    border-color: #318ce7;
-    border-style: solid;
-    box-shadow: inset 0 10px 20px #318ce7;
+.waitToShow {
+  text-align: left;
+  display: none;
+}
+
+#image-header {
+  display: none;
+}
+
+h3 {
+  text-align: center;
+}
+
+#crop-submit {
+  display: none;
+  cursor: pointer;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #318ce7;
+}
+
+#crop-submit:hover {
+  background: #ddd;
+}
+
+.jcrop-holder {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 </style>
@@ -188,31 +207,30 @@ def home():
 
 <h3>Print Share</h3>
 <p>Share the web version of a print article</p>
+<p id="status"></p>
+
+<h3 id="image-header">Your Picture</h3>
+
+<form>
+  <img src="" id='crop-image'/>
+
+  <div id="crop-submit">Submit</div>
+
+  <p class="waitToShow">Have we not found it yet? Sorry about that! Help us narrow it down:</p>
+  <p id="q1" class="waitToShow">Publication<br><input type="text" name="q1" id="text1"></input></p>
+  <p id="q2" class="waitToShow">Author<br><input type="text" name="q2" id="text2"></input></p>
+  <p id="q3" class="waitToShow">Date<br><input type="text" name="q3" id="text3"></input></p>
+  <p id="q4" class="waitToShow">Other Keywords<br><input type="text" name="q4" id="text4"></input>
+  <br>
+  
+</form>
 
 <noscript>Note: You must have javascript enabled in order to upload and
 dynamically view new images.</noscript>
 <form>
-  <p id="status">Upload an image</p>
+  <p>Upload an image</p>
   <div id="progressbar"></div>
   <input id="file" type="file" />
-</form>
-<form id="textbox" action="refine" method="POST">
-            <p><input type="text" name="q1">Publication</input>
-            </p>
-	    <p><input type="text" name="q2">Author</input>
-            </p>
-	    <p><input type="text" name="q3">Date</input>
-            </p>
-	    <p><input type="text" name="q4">Other Keywords</input>
-            <input type="submit" value="submit" /></p>
-
-</form>
-
-<h3>Your Picture</h3>
-
-<form>
-  <img src="" id='crop-image'/>
-  <div id="crop-submit" style="display:none">Submit</div>
 </form>
 
 <script>
@@ -222,7 +240,6 @@ dynamically view new images.</noscript>
       var status = $('#status');
       var xhr = new XMLHttpRequest();
       xhr.upload.addEventListener('loadstart', function(e1){
-          status.text('uploading image');
           progressbar.progressbar({max: e1.total});
       });
       xhr.upload.addEventListener('progress', function(e1){
@@ -233,18 +250,17 @@ dynamically view new images.</noscript>
       xhr.onreadystatechange = function(e1) {
           if (this.readyState == 4)  {
               if (this.status == 200){
-                  var text = 'Your Results: ' + this.responseText;
                   targetURL = this.responseText
               }
               else
                   var text = 'upload failed: code ' + this.status;
-              status.html(text + '<br/>Select an image');
               progressbar.progressbar('destroy');
 
               $('#crop-image').attr('src', targetURL);
               $('#crop-image').Jcrop({
                   onSelect: offerSubmit,
-                  onChange: offerSubmit
+                  onChange: offerSubmit, 
+                  setSelect: [0,0,9999,9999]
                 });
           }
       };
@@ -254,23 +270,23 @@ dynamically view new images.</noscript>
   };
 
   function offerSubmit(c){
-    $("#crop-submit").css('display', 'block')
+    $("#crop-submit").css('display', 'block');
+    $(".waitToShow").css('display', 'block');
+    $("#image-header").css('display', 'initial');
 
     $('#crop-submit').unbind().click(function (){
           var target = $('#crop-image')
+          var pub = $('#text1').val();
+          var author = $('#text2').val();
+          var date = $('#text3').val();
+          var other = $('#text4').val();
 
-          console.log('')
-          console.log(c.x)
-          console.log(c.y)
-          console.log(c.x2)
-          console.log(c.y2)
-          console.log(targetURL)
-
-          $.post('/crop', {target: targetURL, left: c.x, upper: c.y, right: c.x2, lower: c.y2}, function(reply){
+          $.post('/crop', {target: targetURL, left: c.x, upper: c.y, right: c.x2, lower: c.y2,
+                            q1: pub, q2: author, q3: date, q4: other},
+                            function(reply){
             $('#status').html(reply)
             })
       })
-
   }
 
   $('#file').change(function(e){
@@ -283,4 +299,3 @@ dynamically view new images.</noscript>
 if __name__ == '__main__':
     app.debug = True
     app.run('0.0.0.0', threaded=True)
-
