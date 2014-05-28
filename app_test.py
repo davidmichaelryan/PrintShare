@@ -133,7 +133,7 @@ def home():
     padding: 2em;
     background:white;
     color: #318ce7;
-    font: 24px/1.6 menlo, monospace;
+    font: 16px/1.6 menlo, monospace;
     text-align:center;
   }
 
