@@ -110,6 +110,7 @@ def crop_ajax():
 		# + "Tweet it" + '<br>' 
   #               + '</div>'
   #               + '</a>' + '<br>')
+
     return answer
 
 
