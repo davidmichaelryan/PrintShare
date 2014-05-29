@@ -289,6 +289,9 @@ def home():
     padding-right: 1em;
 
   }
+  #status span:hover{
+  cursor:pointer;
+  }
 
   a {
     color: #318ce7;
