@@ -1,5 +1,5 @@
 import flask
-from flask import redirect, url_for
+from flask import Flask, redirect, url_for
 from flask import session, flash, g, \
      render_template
 from flask_oauth import OAuth
@@ -12,6 +12,7 @@ from hashlib import sha1
 from flask import request 
 import pytesseract
 import google
+import crossdomain
 import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -167,7 +168,8 @@ def get_twitter_token():
     if user is not None:
         return user.oauth_token, user.oauth_secret
 
-@app.route('/tweet', methods=['POST'])
+@app.route('/tweet', methods=['POST', 'OPTIONS'])
+@crossdomain(origin='*')
 def tweet():
     """Calls the remote twitter API to create a new status update."""
     if g.user is None:
@@ -188,6 +190,7 @@ def tweet():
 
 
 @app.route('/login')
+@crossdomain(origin='*')
 def login():
     """Calling into authorize will cause the OpenID auth machinery to kick
     in.  When all worked out as expected, the remote application will
