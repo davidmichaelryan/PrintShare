@@ -197,7 +197,9 @@ def before_request():
 
 
 @app.after_request
+@crossdomain(origin='*')
 def after_request(response):
+    response.headers['Access-Control-Allow-Headers'] = "Origin, X-Requested-With,Content-Type, Accept"
     return response
 
 
@@ -256,6 +258,7 @@ def logout():
 
 
 @app.route('/oauth-authorized', methods=['GET', 'OPTIONS'])
+@twitter.authorized_handler
 @crossdomain(origin='*')
 def oauth_authorized(resp):
     """Called after authorization.  After this function finished handling,
