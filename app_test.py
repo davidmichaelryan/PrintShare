@@ -12,8 +12,13 @@ from hashlib import sha1
 from flask import request 
 import pytesseract
 import google
-import crossdomain
 import sys
+
+from datetime import timedelta
+from flask import make_response, request, current_app
+from functools import update_wrapper
+
+
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -32,6 +37,47 @@ q4 = ''
 app = flask.Flask(__name__, static_folder=DATA_DIR)
 app.secret_key = os.urandom(24)
 oauth = OAuth()
+
+def crossdomain(origin=None, methods=None, headers=None, max_age=21600, attach_to_all=True, automatic_options=True):  
+    if methods is not None:
+        methods = ', '.join(sorted(x.upper() for x in methods))
+    if headers is not None and not isinstance(headers, basestring):
+        headers = ', '.join(x.upper() for x in headers)
+    if not isinstance(origin, basestring):
+        origin = ', '.join(origin)
+    if isinstance(max_age, timedelta):
+        max_age = max_age.total_seconds()
+
+    def get_methods():
+        if methods is not None:
+            return methods
+
+        options_resp = current_app.make_default_options_response()
+        return options_resp.headers['allow']
+
+    def decorator(f):
+        def wrapped_function(*args, **kwargs):
+            if automatic_options and request.method == 'OPTIONS':
+                resp = current_app.make_default_options_response()
+            else:
+                resp = make_response(f(*args, **kwargs))
+            if not attach_to_all and request.method != 'OPTIONS':
+                return resp
+
+            h = resp.headers
+
+            h['Access-Control-Allow-Origin'] = origin
+            h['Access-Control-Allow-Methods'] = get_methods()
+            h['Access-Control-Max-Age'] = str(max_age)
+            if headers is not None:
+                h['Access-Control-Allow-Headers'] = headers
+            return resp
+
+        f.provide_automatic_options = False
+        return update_wrapper(wrapped_function, f)
+    return decorator
+
+
 
 
 def safe_addr(ip_addr):
@@ -156,6 +202,7 @@ def after_request(response):
 
 
 @twitter.tokengetter
+@crossdomain(origin='*')
 def get_twitter_token():
     """This is used by the API to look for the auth token and secret
     it should use for API calls.  During the authorization handshake
@@ -189,7 +236,7 @@ def tweet():
     return redirect(url_for('index'))
 
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'OPTIONS'])
 @crossdomain(origin='*')
 def login():
     """Calling into authorize will cause the OpenID auth machinery to kick
@@ -200,15 +247,16 @@ def login():
         next=request.args.get('next') or request.referrer or None))
 
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
 def logout():
     session.pop('user', None)
     flash('You were signed out')
     return redirect(request.referrer or url_for('index'))
 
 
-@app.route('/oauth-authorized')
-@twitter.authorized_handler
+@app.route('/oauth-authorized', methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
 def oauth_authorized(resp):
     """Called after authorization.  After this function finished handling,
     the OAuth information is removed from the session again.  When this
@@ -245,7 +293,8 @@ def oauth_authorized(resp):
 
 
     
-@app.route('/')
+@app.route('/', methods=['GET', 'OPTIONS'])
+@crossdomain(origin='*')
 def home():
   try:  # Reset saved files on each start
     rmtree(DATA_DIR, True)
@@ -450,3 +499,4 @@ function tweetLink(){
 if __name__ == '__main__':
     app.debug = True
     app.run('0.0.0.0', threaded=True)
+
