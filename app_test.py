@@ -166,7 +166,7 @@ twitter = oauth.remote_app('twitter',
     base_url='https://api.twitter.com/1/',
     request_token_url='https://api.twitter.com/oauth/request_token',
     access_token_url='https://api.twitter.com/oauth/access_token',
-    authorize_url='https://api.twitter.com/oauth/authenticate',
+    authorize_url='https://api.twitter.com/oauth/authorize',
     consumer_key='PxOmrR580HNL3j5YB1S74t2hp',
     consumer_secret='vNd8aqeajik3D44PI9dgcTBMPj1cLPFpJ6pyVBkl4uOVau2hBy'
 )
