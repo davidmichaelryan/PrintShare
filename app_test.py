@@ -192,7 +192,8 @@ def add_cors(resp):
 @app.route('/login',methods=['GET', 'POST', 'OPTIONS'])
 @crossdomain(origin='*')
 def login():
-    return twitter.authorize()
+    twitter.authorize()
+    return 'got authoriEd'
     #return twitter.authorize(callback=url_for('oauth_authorized',
     #    next=request.args.get('next') or request.referrer or None))
 
