@@ -201,7 +201,6 @@ def login():
 @crossdomain(origin='*')
 @twitter.authorized_handler
 def oauth_authorized(resp):
-    return 'got to oauth_authorized'
     next_url = request.args.get('next') or url_for('index')
     if resp is None:
         flash(u'You denied the request to sign in.')
