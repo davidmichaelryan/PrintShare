@@ -14,7 +14,7 @@ def clean(x):
     return True
 
 def query(q):
-    url = 'https://www.googleapis.com/customsearch/v1?key=AIzaSyDLjjiXwmTfTKufnyhoKgCZhG6rmXz7lpM&cx=002838561577770740964:v1yhgyblaxo&q='
+    url = 'https://www.googleapis.com/customsearch/v1?key=AIzaSyABdc186y43a0KonOnwoonmr-4FOHmO8Mw&cx=014496257646758806686:btvufahkqu4&q='
     
     q = q.replace(',', '').replace('.','').replace("''", '').replace('\n', ' ').replace('-',' ')
     q = q.split(' ')
