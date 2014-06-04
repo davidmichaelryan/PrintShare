@@ -253,7 +253,7 @@ h3 {
 <noscript>Note: You must have javascript enabled in order to upload and
 dynamically view new images.</noscript>
 <form id="image-upload">
-  <p style="font-size:24px>Upload an image</p>
+  <p style="font-size:24px">Upload an image</p>
   <div id="progressbar"></div>
   <input id="file" type="file"/>
 </form>
@@ -318,6 +318,7 @@ dynamically view new images.</noscript>
   $('#file').change(function(e){
       file_select_handler(e.target.files[0]);
       e.target.value = '';
+      $("#image-upload").hide();
   });
 
 </script>
