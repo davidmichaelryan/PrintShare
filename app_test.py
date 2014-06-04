@@ -83,7 +83,7 @@ def crop_ajax():
     croppedImage = image.crop((int(left), int(upper), int(right), int(lower)))
 
     q = pytesseract.image_to_string(croppedImage)
-    q = ' '+q1+' '+q2+' '+q3+' '+q4+' '+q
+    q = q+' '+q1+' '+q2+' '+q3+' '+q4
     q1=''
     q2=''
     q3=''
@@ -119,6 +119,7 @@ def home():
 <meta charset="utf-8" />
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"></script>
+<meta name="viewport" content="width=device-width">
 
 <link rel="stylesheet" type="text/css" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/themes/vader/jquery-ui.css" />
 
@@ -237,7 +238,7 @@ h3 {
 <body>
 <div id="loading"><img src="http://sierrafire.cr.usgs.gov/images/loading.gif"/></div>
 
-<h3 id="title">PrintShare</h3>
+<h3 id="title">PrintShare</h3><img src="https://rawgit.com/davidmichaelryan/PrintShare/master/logo.png" id="logo">
 <p style="padding-bottom: 10px;border-bottom: 1px solid rgb(49, 140, 231);margin-top: 0">Share the web version of a print article</p>
 <p id="status"></p>
 
