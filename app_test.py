@@ -83,7 +83,7 @@ def crop_ajax():
     croppedImage = image.crop((int(left), int(upper), int(right), int(lower)))
 
     q = pytesseract.image_to_string(croppedImage)
-    q = ' '+q+' '+q1+' '+q2+' '+q3+' '+q4
+    q = ' '+q1+' '+q2+' '+q3+' '+q4+' '+q
     q1=''
     q2=''
     q3=''
