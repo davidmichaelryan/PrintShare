@@ -91,7 +91,7 @@ def crop_ajax():
     answer = ''
     result = google.query(q)
     for r in result:
-      answer = (answer + '<a href="' + str(r[0]) + '">'
+      answer = (answer + '<a target="_blank" href="' + str(r[0]) + '">'
                 + '<div class="result">'
                 + str(r[1]) + '<br>' 
                 + str(r[0]) + '<br>'
@@ -132,9 +132,13 @@ def home():
     margin: auto;
     padding: 2em;
     background:white;
-    color: #318ce7;
+    color: #154bb6;
     font: 16px/1.6 menlo, monospace;
+    font-weight: bold;
     text-align:center;
+    background-image: url('http://st.houzz.com/simgs/18b1530602138ee1_4-3476/contemporary-wallpaper.jpg'); 
+    background-size: 60%;
+    background-position: top center;
   }
 
   #status {
@@ -155,7 +159,7 @@ def home():
 
 
   a {
-    color: #318ce7;
+    color: #154bb6;
   }
 
   .notice {
@@ -168,8 +172,8 @@ def home():
     text-align: center;
     padding: 10em 0;
     margin: 5em 0;
-    color: #318ce7;
-    border: 2px dashed #318ce7;
+    color: #154bb6;
+    border: 2px dashed #154bb6;
     border-radius: 7px;
     cursor: default;
 }
@@ -204,7 +208,7 @@ h3 {
   cursor: pointer;
   margin-top: 20px;
   margin-bottom: 20px;
-  border: 1px solid #318ce7;
+  border: 1px solid #154bb6;
 }
 
 #crop-submit:hover {
@@ -233,7 +237,7 @@ h3 {
 <body>
 <div id="loading"><img src="http://sierrafire.cr.usgs.gov/images/loading.gif"/></div>
 
-<h3 id="title">Print Share</h3>
+<h3 id="title">PrintShare</h3>
 <p style="padding-bottom: 10px;border-bottom: 1px solid rgb(49, 140, 231);margin-top: 0">Share the web version of a print article</p>
 <p id="status"></p>
 
@@ -253,7 +257,7 @@ h3 {
 <noscript>Note: You must have javascript enabled in order to upload and
 dynamically view new images.</noscript>
 <form id="image-upload">
-  <p style="font-size:24px;">Upload an image</p>
+  <p style="font-size:24px">Upload an image</p>
   <div id="progressbar"></div>
   <input id="file" type="file"/>
 </form>
@@ -318,7 +322,6 @@ dynamically view new images.</noscript>
   $('#file').change(function(e){
       file_select_handler(e.target.files[0]);
       e.target.value = '';
-      $("#image-upload").hide();
   });
 
 </script>
