@@ -233,7 +233,7 @@ h3 {
 <body>
 <div id="loading"><img src="http://sierrafire.cr.usgs.gov/images/loading.gif"/></div>
 
-<h3 id="title">Print Share</h3>
+<h3 id="title">PrintShare</h3>
 <p style="padding-bottom: 10px;border-bottom: 1px solid rgb(49, 140, 231);margin-top: 0">Share the web version of a print article</p>
 <p id="status"></p>
 
@@ -318,7 +318,6 @@ dynamically view new images.</noscript>
   $('#file').change(function(e){
       file_select_handler(e.target.files[0]);
       e.target.value = '';
-      $("#image-upload").hide();
   });
 
 </script>
