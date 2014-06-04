@@ -83,7 +83,7 @@ def crop_ajax():
     croppedImage = image.crop((int(left), int(upper), int(right), int(lower)))
 
     q = pytesseract.image_to_string(croppedImage)
-    q = q+' '+q1+' '+q2+' '+q3+' '+q4
+    q = ' '+q+' '+q1+' '+q2+' '+q3+' '+q4
     q1=''
     q2=''
     q3=''
@@ -243,7 +243,7 @@ h3 {
 
 
 <img src="https://rawgit.com/davidmichaelryan/PrintShare/master/logo.png" id="logo">
-<h3 id="title">PrintShare</h3>
+<h3 id="title">Print Share</h3>
 <p style="padding-bottom: 10px;border-bottom: 1px solid rgb(49, 140, 231);margin-top: 0">Share the web version of a print article</p>
 <p id="status"></p>
 
