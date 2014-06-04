@@ -15,9 +15,8 @@ import google
 import sys
 
 from datetime import timedelta
-from flask import make_response, request, current_app
+from flask import make_response, current_app
 from functools import update_wrapper
-
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -38,7 +37,9 @@ app = flask.Flask(__name__, static_folder=DATA_DIR)
 app.secret_key = os.urandom(24)
 oauth = OAuth()
 
-def crossdomain(origin=None, methods=None, headers=None, max_age=21600, attach_to_all=True, automatic_options=True):  
+def crossdomain(origin=None, methods=None, headers=None,
+                max_age=21600, attach_to_all=True,
+                automatic_options=True):
     if methods is not None:
         methods = ', '.join(sorted(x.upper() for x in methods))
     if headers is not None and not isinstance(headers, basestring):
@@ -76,8 +77,6 @@ def crossdomain(origin=None, methods=None, headers=None, max_age=21600, attach_t
         f.provide_automatic_options = False
         return update_wrapper(wrapped_function, f)
     return decorator
-
-
 
 
 def safe_addr(ip_addr):
@@ -163,138 +162,62 @@ def crop_ajax():
 ##===========START TWITTER===========
 
 
-
-# Use Twitter as example remote application
 twitter = oauth.remote_app('twitter',
-    # unless absolute urls are used to make requests, this will be added
-    # before all URLs.  This is also true for request_token_url and others.
-    base_url='https://api.twitter.com/1.1/',
-    # where flask should look for new request tokens
+    base_url='https://api.twitter.com/1/',
     request_token_url='https://api.twitter.com/oauth/request_token',
-    # where flask should exchange the token with the remote application
     access_token_url='https://api.twitter.com/oauth/access_token',
-    # twitter knows two authorizatiom URLs.  /authorize and /authenticate.
-    # they mostly work the same, but for sign on /authenticate is
-    # expected because this will give the user a slightly different
-    # user interface on the twitter side.
-    authorize_url='https://api.twitter.com/oauth/authenticate',
-    # the consumer keys from the twitter application registry.
+    authorize_url='https://api.twitter.com/oauth/authorize',
     consumer_key='PxOmrR580HNL3j5YB1S74t2hp',
     consumer_secret='vNd8aqeajik3D44PI9dgcTBMPj1cLPFpJ6pyVBkl4uOVau2hBy'
 )
 
-class User():
-    name = ''
-    id = ''
-    oauth_token = ''
-    oauth_secret = ''
-
-@app.before_request
-def before_request():
-    g.user = None
-    if 'user' in session:
-        g.user = session['user']
-
+@twitter.tokengetter
+def get_twitter_token(token=None):
+    return session.get('twitter_token')
 
 @app.after_request
-@crossdomain(origin='*')
-def after_request(response):
-    response.headers['Access-Control-Allow-Headers'] = "*"
-    return response
+def add_cors(resp):
+    """ Ensure all responses have the CORS headers. This ensures any failures are also accessible
+        by the client. """
+    resp.headers['Access-Control-Allow-Origin'] = flask.request.headers.get('Origin','*')
+    resp.headers['Access-Control-Allow-Credentials'] = 'true'
+    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
+    resp.headers['Access-Control-Allow-Headers'] = flask.request.headers.get( 
+        'Access-Control-Request-Headers', 'Authorization' )
+    # set low for debugging
+    if app.debug:
+        resp.headers['Access-Control-Max-Age'] = '1'
+    return resp
 
-
-@twitter.tokengetter
-@crossdomain(origin='*')
-def get_twitter_token():
-    """This is used by the API to look for the auth token and secret
-    it should use for API calls.  During the authorization handshake
-    a temporary set of token and secret is used, but afterwards this
-    function has to return the token and secret.  If you don't want
-    to store this in the database, consider putting it into the
-    session instead.
-    """
-    user = g.user
-    if user is not None:
-        return user.oauth_token, user.oauth_secret
-
-@app.route('/tweet', methods=['POST', 'GET', 'OPTIONS'])
-@crossdomain(origin='*')
-def tweet():
-    """Calls the remote twitter API to create a new status update."""
-    if g.user is None:
-        return redirect(url_for('login', next=request.url))
-    return 'got to after login'
-    status = request.form['tweet']
-    if not status:
-        return redirect(url_for('index'))
-    return 'got to right before post'
-    resp = twitter.post('statuses/update.json', data={
-        'status':       status
-    })
-    if resp.status == 403:
-        flash('Your tweet was too long.')
-    elif resp.status == 401:
-        flash('Authorization error with Twitter.')
-    else:
-        flash('Successfully tweeted your tweet (ID: #%s)' % resp.data['id'])
-    return redirect(url_for('index'))
-
-
-@app.route('/login', methods=['GET', 'OPTIONS'])
+@app.route('/login',methods=['GET', 'POST', 'OPTIONS'])
 @crossdomain(origin='*')
 def login():
-    #return 'got to login'
-    return twitter.authorize()
+  return twitter.authorize(callback=url_for('oauth_authorized',
+        next=request.args.get('next') or request.referrer or None))
 
-@app.route('/logout', methods=['GET', 'OPTIONS'])
+@app.route('/oauth-authorized',methods=['POST', 'GET', 'OPTIONS'])
 @crossdomain(origin='*')
-def logout():
-    session.pop('user', None)
-    return redirect(request.referrer or url_for('index'))
-
-
-@app.route('/oauth-authorized', methods=['GET', 'OPTIONS'])
 @twitter.authorized_handler
-@crossdomain(origin='*')
 def oauth_authorized(resp):
-
-    """Called after authorization.  After this function finished handling,
-    the OAuth information is removed from the session again.  When this
-    happened, the tokengetter from above is used to retrieve the oauth
-    token and secret.
-
-    Because the remote application could have re-authorized the application
-    it is necessary to update the values in the database.
-
-    If the application redirected back after denying, the response passed
-    to the function will be `None`.  Otherwise a dictionary with the values
-    the application submitted.  Note that Twitter itself does not really
-    redirect back unless the user clicks on the application name.
-    """
-    return 'got to oauth-authorized' 
-    resp.headers['Access-Control-Allow-Headers'] = "*"
     next_url = request.args.get('next') or url_for('index')
     if resp is None:
+        flash(u'You denied the request to sign in.')
         return redirect(next_url)
 
-    user = User() 
-    user.name = resp['screen_name']
-    user.oauth_token = resp['oauth_token']
-    user.oauth_secret = resp['oauth_token_secret']
-    user.id = resp['user_id']
+    session['twitter_token'] = (
+        resp['oauth_token'],
+        resp['oauth_token_secret']
+    )
+    session['twitter_user'] = resp['screen_name']
 
-    session['user'] = user
-
+    flash('You were signed in as %s' % resp['screen_name'])
     return redirect(next_url)
-
-
 
 ##===========END TWITTER===========
 
 
     
 @app.route('/', methods=['GET', 'OPTIONS'])
-@crossdomain(origin='*')
 def home():
   try:  # Reset saved files on each start
     rmtree(DATA_DIR, True)
@@ -304,6 +227,7 @@ def home():
 
   return """
 <!doctype html>
+<head>
 <title>Print Share</title>
 <meta charset="utf-8" />
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -371,10 +295,17 @@ def home():
 
 #image-header {
   display: none;
+  margin-bottom:20px;
 }
 
 h3 {
   text-align: center;
+
+}
+
+#title{
+    font-size:48px;
+  margin:0 auto;
 }
 
 #crop-submit {
@@ -395,37 +326,47 @@ h3 {
   margin-right: auto;
 }
 
+#loading{
+  position:fixed;
+  top:-100px;
+  left:0;
+  z-index:999999999999;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  display:none;
+}
+
 </style>
+</head>
+<body>
+<div id="loading"><img src="http://sierrafire.cr.usgs.gov/images/loading.gif"/></div>
 
-
-<h3>Print Share</h3>
-<p>Share the web version of a print article</p>
+<h3 id="title">Print Share</h3>
+<p style="padding-bottom: 10px;border-bottom: 1px solid rgb(49, 140, 231);margin-top: 0">Share the web version of a print article</p>
 <p id="status"></p>
 
 <h3 id="image-header">Your Picture</h3>
 
 <form>
   <img src="" id='crop-image'/>
-
-  <div id="crop-submit">Submit</div>
-
   <p class="waitToShow">Have we not found it yet? Sorry about that! Help us narrow it down:</p>
   <p id="q1" class="waitToShow">Publication<br><input type="text" name="q1" id="text1"></input></p>
   <p id="q2" class="waitToShow">Author<br><input type="text" name="q2" id="text2"></input></p>
   <p id="q3" class="waitToShow">Date<br><input type="text" name="q3" id="text3"></input></p>
   <p id="q4" class="waitToShow">Other Keywords<br><input type="text" name="q4" id="text4"></input>
   <br>
-  
+  <div id="crop-submit">Submit</div>
 </form>
 
 <noscript>Note: You must have javascript enabled in order to upload and
 dynamically view new images.</noscript>
-<form>
+<form id="image-upload">
   <p>Upload an image</p>
   <div id="progressbar"></div>
-  <input id="file" type="file" />
+  <input id="file" type="file"/>
 </form>
-
+<span onclick="tweetLink('http://mortoray.com/2014/04/09/allowing-unlimited-access-with-cors/')" style="color:white;background-color:#318ce7;padding:5px 5px;border-radius:5px;margin-bottom:20px;display:inline-block;margin-top:60px;">TEST TWEET the link</span>
 <script>
   var targetURL = ''
   function file_select_handler(to_upload) {
@@ -464,10 +405,10 @@ dynamically view new images.</noscript>
 
   function offerSubmit(c){
     $("#crop-submit").css('display', 'block');
-    $(".waitToShow").css('display', 'block');
-    $("#image-header").css('display', 'initial');
+    $("#image-header").css('display', 'block');
 
     $('#crop-submit').unbind().click(function (){
+          $('#loading').show();
           var target = $('#crop-image')
           var pub = $('#text1').val();
           var author = $('#text2').val();
@@ -477,7 +418,9 @@ dynamically view new images.</noscript>
           $.post('/crop', {target: targetURL, left: c.x, upper: c.y, right: c.x2, lower: c.y2,
                             q1: pub, q2: author, q3: date, q4: other},
                             function(reply){
+            $(".waitToShow").css('display', 'block');
             $('#status').html(reply)
+            $('#loading').hide();
             })
       })
   }
@@ -485,17 +428,20 @@ dynamically view new images.</noscript>
   $('#file').change(function(e){
       file_select_handler(e.target.files[0]);
       e.target.value = '';
+      $("#image-upload").hide();
   });
 
 function tweetLink(link){
   console.log('tweetLink engaged')
-  $.post('/tweet', {tweet: link},
+  $.post('/login', {tweet: link},
                             function(reply){
                             console.log(reply)
             $('#status').html('HOLY SHIT YOU TWEETED IT')
             })
 }
 </script>
+</body>
+</html>
 """ 
 
 if __name__ == '__main__':

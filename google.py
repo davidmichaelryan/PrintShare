@@ -39,5 +39,4 @@ def query(q):
         else:
             results[i].append(data['items'][i]['link'])
             results[i].append(data['items'][i]['title'])
-            results[i].append(data['items'][i]['displayLink'])
     return results 

@@ -1,8 +1,4 @@
 import flask
-from flask import Flask, redirect, url_for
-from flask import session, flash, g, \
-     render_template
-from flask_oauth import OAuth
 import json
 import os
 import time
@@ -10,14 +6,11 @@ from PIL import Image, ImageFile
 from shutil import rmtree
 from hashlib import sha1
 from flask import request 
+
 import pytesseract
 import google
+from flask import Flask, redirect, url_for
 import sys
-
-from datetime import timedelta
-from flask import make_response, current_app
-from functools import update_wrapper
-
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -34,50 +27,6 @@ q3 = ''
 q4 = ''
 
 app = flask.Flask(__name__, static_folder=DATA_DIR)
-app.secret_key = os.urandom(24)
-oauth = OAuth()
-
-def crossdomain(origin=None, methods=None, headers=None,
-                max_age=21600, attach_to_all=True,
-                automatic_options=True):
-    if methods is not None:
-        methods = ', '.join(sorted(x.upper() for x in methods))
-    if headers is not None and not isinstance(headers, basestring):
-        headers = ', '.join(x.upper() for x in headers)
-    if not isinstance(origin, basestring):
-        origin = ', '.join(origin)
-    if isinstance(max_age, timedelta):
-        max_age = max_age.total_seconds()
-
-    def get_methods():
-        if methods is not None:
-            return methods
-
-        options_resp = current_app.make_default_options_response()
-        return options_resp.headers['allow']
-
-    def decorator(f):
-        def wrapped_function(*args, **kwargs):
-            if automatic_options and request.method == 'OPTIONS':
-                resp = current_app.make_default_options_response()
-            else:
-                resp = make_response(f(*args, **kwargs))
-            if not attach_to_all and request.method != 'OPTIONS':
-                return resp
-
-            h = resp.headers
-
-            h['Access-Control-Allow-Origin'] = origin
-            h['Access-Control-Allow-Methods'] = get_methods()
-            h['Access-Control-Max-Age'] = str(max_age)
-            if headers is not None:
-                h['Access-Control-Allow-Headers'] = headers
-            return resp
-
-        f.provide_automatic_options = False
-        return update_wrapper(wrapped_function, f)
-    return decorator
-
 
 def safe_addr(ip_addr):
     """Strip of the trailing two octets of the IP address."""
@@ -145,76 +94,14 @@ def crop_ajax():
       answer = (answer + '<a href="' + str(r[0]) + '">'
                 + '<div class="result">'
                 + str(r[1]) + '<br>' 
-                + str(r[2]) + '<br>' 
                 + str(r[0]) + '<br>'
                 + '</div>'
-        # + '<a href="http://twitter.com/home/?status=' + str(r[0]) +'">'
-          +     '</a><span onclick="tweetLink(&quot;'+str(r[0])+'&quot;)" style="color:white;background-color:#318ce7;padding:5px 5px;border-radius:5px;margin-bottom:20px;display:inline-block;">Tweet the link</span>')
-  #     + '<div class="tweet">'
-        # + "Tweet it" + '<br>' 
-  #               + '</div>'
-  #               + '</a>' + '<br>')
-
+    + '<a target="_blank" style="color:white;background-color:#318ce7;padding:5px 5px;border-radius:5px;margin-bottom:20px;display:inline-block;" href="http://twitter.com/home/?status=' +str(r[1]) + ' --> ' +str(r[0])+'">'
+    + '<div class="tweet">'
+    + "Tweet it" + '<br>' 
+                + '</div>'
+                + '</a>' + '<br>')
     return answer
-
-
-
-##===========START TWITTER===========
-
-
-twitter = oauth.remote_app('twitter',
-    base_url='https://api.twitter.com/1/',
-    request_token_url='https://api.twitter.com/oauth/request_token',
-    access_token_url='https://api.twitter.com/oauth/access_token',
-    authorize_url='https://api.twitter.com/oauth/authorize',
-    consumer_key='PxOmrR580HNL3j5YB1S74t2hp',
-    consumer_secret='vNd8aqeajik3D44PI9dgcTBMPj1cLPFpJ6pyVBkl4uOVau2hBy'
-)
-
-@twitter.tokengetter
-def get_twitter_token(token=None):
-    return session.get('twitter_token')
-
-@app.after_request
-def add_cors(resp):
-    """ Ensure all responses have the CORS headers. This ensures any failures are also accessible
-        by the client. """
-    resp.headers['Access-Control-Allow-Origin'] = flask.request.headers.get('Origin','*')
-    resp.headers['Access-Control-Allow-Credentials'] = 'true'
-    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
-    resp.headers['Access-Control-Allow-Headers'] = flask.request.headers.get( 
-        'Access-Control-Request-Headers', 'Authorization' )
-    # set low for debugging
-    if app.debug:
-        resp.headers['Access-Control-Max-Age'] = '1'
-    return resp
-
-@app.route('/login',methods=['GET', 'POST', 'OPTIONS'])
-@crossdomain(origin='*')
-def login():
-    return twitter.authorize(callback=url_for('oauth_authorized',
-        next=request.args.get('next') or request.referrer or None))
-
-@app.route('/oauth-authorized',methods=['POST', 'GET', 'OPTIONS'])
-@crossdomain(origin='*')
-@twitter.authorized_handler
-def oauth_authorized(resp):
-    next_url = request.args.get('next') or url_for('index')
-    if resp is None:
-        flash(u'You denied the request to sign in.')
-        return redirect(next_url)
-
-    session['twitter_token'] = (
-        resp['oauth_token'],
-        resp['oauth_token_secret']
-    )
-    session['twitter_user'] = resp['screen_name']
-
-    flash('You were signed in as %s' % resp['screen_name'])
-    return redirect(next_url)
-
-##===========END TWITTER===========
-
 
     
 @app.route('/', methods=['GET', 'OPTIONS'])
@@ -227,6 +114,7 @@ def home():
 
   return """
 <!doctype html>
+<head>
 <title>Print Share</title>
 <meta charset="utf-8" />
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -259,7 +147,6 @@ def home():
   }
   .tweet {
     text-align: right;
-    padding-right: 1em;
 
   }
     #status span:hover{
@@ -292,12 +179,24 @@ def home():
   display: none;
 }
 
+#q1, #q2, #q3, #q4{
+    margin-left:25px;
+    margin-right:20px;
+}
+
 #image-header {
   display: none;
+  margin-bottom:20px;
 }
 
 h3 {
   text-align: center;
+
+}
+
+#title{
+    font-size:48px;
+  margin:0 auto;
 }
 
 #crop-submit {
@@ -318,38 +217,46 @@ h3 {
   margin-right: auto;
 }
 
+#loading{
+  position:fixed;
+  top:-100px;
+  left:0;
+  z-index:999999999999;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  display:none;
+}
+
 </style>
+</head>
+<body>
+<div id="loading"><img src="http://sierrafire.cr.usgs.gov/images/loading.gif"/></div>
 
-
-<h3>Print Share</h3>
-<p>Share the web version of a print article</p>
+<h3 id="title">Print Share</h3>
+<p style="padding-bottom: 10px;border-bottom: 1px solid rgb(49, 140, 231);margin-top: 0">Share the web version of a print article</p>
 <p id="status"></p>
 
 <h3 id="image-header">Your Picture</h3>
 
 <form>
   <img src="" id='crop-image'/>
-
-  <div id="crop-submit">Submit</div>
-
-  <p class="waitToShow">Have we not found it yet? Sorry about that! Help us narrow it down:</p>
+  <p class="waitToShow" style="margin-bottom:0">Have we not found it yet? Sorry about that! Help us narrow it down:</p>
   <p id="q1" class="waitToShow">Publication<br><input type="text" name="q1" id="text1"></input></p>
   <p id="q2" class="waitToShow">Author<br><input type="text" name="q2" id="text2"></input></p>
   <p id="q3" class="waitToShow">Date<br><input type="text" name="q3" id="text3"></input></p>
   <p id="q4" class="waitToShow">Other Keywords<br><input type="text" name="q4" id="text4"></input>
   <br>
-  
+  <div id="crop-submit">Submit</div>
 </form>
 
 <noscript>Note: You must have javascript enabled in order to upload and
 dynamically view new images.</noscript>
-<form>
-  <p>Upload an image</p>
+<form id="image-upload">
+  <p style="font-size:24px;">Upload an image</p>
   <div id="progressbar"></div>
-  <input id="file" type="file" />
+  <input id="file" type="file"/>
 </form>
-<span onclick="tweetLink('http://mortoray.com/2014/04/09/allowing-unlimited-access-with-cors/')" style="color:white;background-color:#318ce7;padding:5px 5px;border-radius:5px;margin-bottom:20px;display:inline-block;margin-top:60px;">TEST TWEET the link</span>'
-
 <script>
   var targetURL = ''
   function file_select_handler(to_upload) {
@@ -388,10 +295,10 @@ dynamically view new images.</noscript>
 
   function offerSubmit(c){
     $("#crop-submit").css('display', 'block');
-    $(".waitToShow").css('display', 'block');
-    $("#image-header").css('display', 'initial');
+    $("#image-header").css('display', 'block');
 
     $('#crop-submit').unbind().click(function (){
+          $('#loading').show();
           var target = $('#crop-image')
           var pub = $('#text1').val();
           var author = $('#text2').val();
@@ -401,7 +308,9 @@ dynamically view new images.</noscript>
           $.post('/crop', {target: targetURL, left: c.x, upper: c.y, right: c.x2, lower: c.y2,
                             q1: pub, q2: author, q3: date, q4: other},
                             function(reply){
+            $(".waitToShow").css('display', 'inline-block');
             $('#status').html(reply)
+            $('#loading').hide();
             })
       })
   }
@@ -409,17 +318,12 @@ dynamically view new images.</noscript>
   $('#file').change(function(e){
       file_select_handler(e.target.files[0]);
       e.target.value = '';
+      $("#image-upload").hide();
   });
 
-function tweetLink(link){
-  console.log('tweetLink engaged')
-  $.post('/login', {tweet: link},
-                            function(reply){
-                            console.log(reply)
-            $('#status').html('HOLY SHIT YOU TWEETED IT')
-            })
-}
 </script>
+</body>
+</html>
 """ 
 
 if __name__ == '__main__':
