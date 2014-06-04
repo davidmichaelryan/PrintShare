@@ -233,12 +233,16 @@ h3 {
   display:none;
 }
 
+#logo {
+  max-height: 100px;
+}
+
 </style>
 </head>
 <body>
 <div id="loading"><img src="http://sierrafire.cr.usgs.gov/images/loading.gif"/></div>
 
-<h3 id="title">PrintShare</h3><img src="https://rawgit.com/davidmichaelryan/PrintShare/master/logo.png" id="logo">
+<img src="https://rawgit.com/davidmichaelryan/PrintShare/master/logo.png" id="logo"><h3 id="title">PrintShare</h3>
 <p style="padding-bottom: 10px;border-bottom: 1px solid rgb(49, 140, 231);margin-top: 0">Share the web version of a print article</p>
 <p id="status"></p>
 
