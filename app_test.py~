@@ -159,7 +159,7 @@ def home():
 
 
   a {
-    color: #154bb6;
+    color: #318ce7;
   }
 
   .notice {
@@ -172,8 +172,8 @@ def home():
     text-align: center;
     padding: 10em 0;
     margin: 5em 0;
-    color: #154bb6;
-    border: 2px dashed #154bb6;
+    color: #318ce7;
+    border: 2px dashed #318ce7;
     border-radius: 7px;
     cursor: default;
 }
@@ -208,7 +208,7 @@ h3 {
   cursor: pointer;
   margin-top: 20px;
   margin-bottom: 20px;
-  border: 1px solid #154bb6;
+  border: 1px solid #318ce7;
 }
 
 #crop-submit:hover {
