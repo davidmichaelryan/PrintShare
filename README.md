@@ -1,37 +1,19 @@
 PrintShare
 ==========
 
-Requirements
----------
-Flask==0.9
+## Overview
+PrintShare is a proof-of-concept mobile web app that allows you to take a picture of a print article and share its online version through Twitter. The current version of the project can be found at http://printshare.herokuapp.com . 
 
-Jinja2==2.6
+The project is built on Flask, with some javascript to help on the front end. Since this was all our first time using Flask, the setup is deinitely a little hacky. Most of the code lives in app_test.py - that's where you will find the front end, the image uploader, and the cropping tool. We used Google's open source version of Python Tesseract, which was implemented in pytesseract.py. Finally, the calls to the Google Custom Search API was done in google.py.
 
-http://pyyaml.org/download/pyyaml/PyYAML-3.10.tar.gz
-
--e hg+https://bitbucket.org/etienned/pil-2009-raclette/@55d24e80a982b6180464d6bf1125e021b4b0cbf1#egg=PIL-dev
-
-Werkzeug==0.8.3
-
-argparse==1.2.1
-
-gunicorn==0.17.2
-
-wsgiref==0.1.2
-
-requests==0.11.1
-
-https://pypi.python.org/packages/source/F/Flask-OAuth/Flask-OAuth-0.12.tar.gz
+There is a lot of room for some cool improvement with this app, specifically in better cleaning the OCR results, the user experience, and integration with the Twitter API (a failed attempt can be found in app_test-tweetapi.py)
 
 
-
-Resources
----------
-
-### OCR
-[python tesseract] (https://github.com/madmaze/python-tesseract)
-
-### Html camera access
-`<input type="file" accept="image/*" capture="camera">`
+##Installation and Usage
+- Install the latest version of [Flask](http://flask.pocoo.org/),  Google's version of [Python Tesseract](https://code.google.com/p/python-tesseract/), and the [Python Imaging Library](http://www.pythonware.com/products/pil/) 
+- Clone this repository. 
+- Replace your API keys for the Google Custom Search function, in google.py 
 
 
+##Development
+- run `foreman start` to view a local version of the app.
