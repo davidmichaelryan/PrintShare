@@ -2,7 +2,7 @@ PrintShare
 ==========
 
 ## Overview
-PrintShare is a proof-of-concept mobile web app that allows you to take a picture of a print article and share its online version through Twitter. The current version of the project can be found at http://printshare.herokuapp.com . 
+PrintShare is a proof-of-concept mobile web app that allows you to take a picture of a print article and share its online version through Twitter. The current version of the project can be found at http://printshare.herokuapp.com  
 
 The project is built on Flask, with some javascript to help on the front end. Since this was all our first time using Flask, we often opted for the quickest solution over the 'correct' one, and so we forgoed the templating options provided with the framework. Most of the code lives in app_test.py - that's where you will find the front end, the implementation of the JCrop image uploader, and the cropping tool. We used Google's open source version of Python Tesseract, which was implemented in pytesseract.py. Finally, the calls to the Google Custom Search API are done in google.py.
 
